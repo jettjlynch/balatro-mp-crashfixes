@@ -1,0 +1,36 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+# High priority so these run after Amulet's own patches
+priority = 1000
+
+# 1. Cryptid: deck picker crash when the profile has never started a normal run
+#    "attempt to index field 'last_choices' (a nil value)"
+[[patches]]
+[patches.pattern]
+target = '=[SMODS Cryptid "lib/misc.lua"]'
+pattern = "function Cryptid.enhanced_deck_info(deck)"
+position = "after"
+payload = "G.PROFILES[G.SETTINGS.profile].last_choices = G.PROFILES[G.SETTINGS.profile].last_choices or {}"
+match_indent = true
+times = 1
+
+# 2. Steamodded + Multiplayer: crash when clicking the Cocktail deck in a lobby
+#    "attempt to index field 'effect' (a nil value)"
+[[patches]]
+[patches.regex]
+target = '=[SMODS _ "src/overrides.lua"]'
+pattern = '''\(G\.GAME\.viewed_back or G\.GAME\.selected_back or \{effect = \{center = \{\}\}\}\)\.effect\.center\.sprite_args'''
+position = "at"
+payload = '''(((G.GAME.viewed_back or G.GAME.selected_back or {}).effect or {}).center or {}).sprite_args'''
+times = 1
+
+# 3. Amulet + Multiplayer: crash when the game reconnects to the server
+#    "attempt to call global 'is_big' (a nil value)"
+[[patches]]
+[patches.regex]
+target = '=[lovely json "libs/json/json.lua"]'
+pattern = '''if is_big\(val\)'''
+position = "at"
+payload = '''if is_big and is_big(val)'''
+times = 1
